@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relitalk — Специальное предложение</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple:#7B5BF5;
+  --purple-light:#9B7FF8;
+  --purple-pale:#EEE9FF;
+  --bg:#F2EFE9;
+  --card:#FFFFFF;
+  --dark:#111111;
+  --gray:#888;
+  --gold:#C49A55;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--dark);overflow-x:hidden}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.fade-up{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+.d1{transition-delay:.08s}.d2{transition-delay:.18s}.d3{transition-delay:.28s}.d4{transition-delay:.38s}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:200;background:rgba(242,239,233,.95);backdrop-filter:blur(20px);padding:0 60px;height:60px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,0,0,.06)}
+.logo{font-size:18px;font-weight:900;color:var(--dark);letter-spacing:.08em;text-transform:uppercase}
+.logo span{color:var(--purple)}
+.nav-btn{background:var(--purple);color:#fff;padding:10px 24px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;transition:all .2s}
+.nav-btn:hover{background:var(--purple-light);transform:translateY(-1px)}
+
+/* TIMER */
+.timer-bar{position:sticky;top:60px;z-index:199;background:var(--dark);padding:10px 60px;display:flex;align-items:center;justify-content:center;gap:20px;transition:background .5s}
+.timer-bar.expired{background:#C0392B}
+.timer-label{font-size:13px;color:rgba(255,255,255,.7);font-weight:500}
+.timer-digits{display:flex;gap:4px;align-items:center}
+.t-block{background:rgba(255,255,255,.1);border-radius:8px;padding:4px 12px;text-align:center;min-width:50px}
+.t-num{font-size:22px;font-weight:900;color:#fff;line-height:1;font-variant-numeric:tabular-nums}
+.t-lbl{font-size:8px;color:rgba(255,255,255,.4);letter-spacing:.1em;text-transform:uppercase}
+.t-sep{font-size:20px;font-weight:900;color:rgba(255,255,255,.3);margin-bottom:6px}
+.timer-note{font-size:12px;color:rgba(255,255,255,.4);font-style:italic}
+.timer-expired-msg{display:none;font-size:14px;font-weight:700;color:#fff}
+
+/* EXPIRED OVERLAY */
+.expired-banner{display:none;background:#FFF3F3;border:1.5px solid #E24B4A;border-radius:16px;padding:16px 24px;text-align:center;max-width:560px;margin:0 auto 32px}
+.expired-banner p{font-size:14px;color:#C0392B;font-weight:600;line-height:1.5}
+
+/* HERO */
+.hero{padding:80px 60px 72px;text-align:center;background:var(--bg)}
+.hero-eye{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--purple);margin-bottom:20px;animation:fadeUp .6s ease both}
+.hero h1{font-size:68px;font-weight:900;line-height:1.0;letter-spacing:-3px;margin-bottom:0;animation:fadeUp .7s .08s ease both}
+.hero h1 .black{color:var(--dark);display:block}
+.hero h1 .purple{color:var(--purple);display:block}
+.hero-sub{font-size:17px;color:var(--gray);margin:20px auto 36px;max-width:480px;line-height:1.6;animation:fadeUp .7s .16s ease both}
+
+/* PROMO */
+.promo-section{max-width:560px;margin:0 auto 56px;animation:fadeUp .7s .2s ease both}
+.promo-hint{font-size:13px;color:var(--gray);margin-bottom:14px}
+.promo-hint strong{color:var(--purple)}
+.promo-row{display:flex;gap:12px;align-items:center;justify-content:center}
+.promo-input{padding:16px 24px;border-radius:50px;border:2px solid rgba(0,0,0,.08);font-size:16px;font-weight:500;width:260px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--dark);transition:border-color .2s;letter-spacing:.06em}
+.promo-input:focus{border-color:var(--purple)}
+.promo-input::placeholder{color:#bbb;letter-spacing:0}
+.promo-input:disabled{opacity:.5;cursor:not-allowed}
+.promo-btn{background:var(--purple);color:#fff;padding:16px 32px;border-radius:50px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s}
+.promo-btn:hover:not(:disabled){background:var(--purple-light);transform:translateY(-1px)}
+.promo-btn:disabled{opacity:.5;cursor:not-allowed}
+.promo-success{display:none;text-align:center;margin-top:14px;font-size:14px;font-weight:700;color:#2D7A4F;background:#E8F5EC;padding:10px 20px;border-radius:50px}
+.promo-error{display:none;text-align:center;margin-top:14px;font-size:14px;color:#E24B4A}
+.promo-expired-msg{display:none;text-align:center;margin-top:14px;font-size:14px;color:#C0392B;font-weight:600;background:#FFF3F3;padding:10px 20px;border-radius:50px}
+
+/* PRICE GRID */
+.price-wrap{max-width:960px;margin:0 auto}
+.price-grid{display:flex;gap:18px;align-items:stretch;margin-bottom:20px}
+.pc{flex:1;background:var(--card);border-radius:28px;padding:32px 28px 28px;display:flex;flex-direction:column;align-items:center;text-align:center;transition:transform .3s,box-shadow .3s;border:2px solid transparent;position:relative}
+.pc:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.07)}
+.pc.f{border-color:var(--purple);box-shadow:0 12px 48px rgba(123,91,245,.15)}
+.pbadge{position:absolute;top:-16px;left:50%;transform:translateX(-50%);background:var(--purple);color:#fff;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:5px 18px;border-radius:50px;white-space:nowrap}
+.ptag{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);background:var(--purple-pale);padding:6px 14px;border-radius:50px;margin-bottom:20px}
+.pname{font-size:26px;font-weight:900;color:var(--dark);margin-bottom:12px;letter-spacing:-1px}
+
+/* PRICES */
+.p-regular{font-size:38px;font-weight:900;line-height:1.1;letter-spacing:-1px;color:var(--dark);margin-bottom:2px;white-space:nowrap}
+.pc.f .p-regular{color:var(--purple)}
+.p-regular-lbl{font-size:12px;color:var(--gray);margin-bottom:12px}
+.pdiv{height:1px;background:rgba(0,0,0,.06);width:80%;margin-bottom:14px}
+/* discount row: badge | зачёркнутая → новая */
+.p-discount-row{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.p-discount-label{font-size:11px;font-weight:700;color:#fff;background:var(--purple);padding:3px 9px;border-radius:50px;flex-shrink:0}
+.p-discount-val{font-size:15px;font-weight:600;color:#bbb;text-decoration:line-through;white-space:nowrap}
+.p-arrow{font-size:14px;color:#bbb}
+.p-discount-new{font-size:20px;font-weight:800;color:#2D7A4F;white-space:nowrap}
+.p-discount-new.hidden{display:none}
+/* after promo: show new price big, strike original discount */
+.p-promo-block{display:none;margin-bottom:8px;text-align:center;padding:10px;background:#F0FAF4;border-radius:12px}
+.p-promo-block.visible{display:block}
+.p-promo-strike{font-size:15px;color:#bbb;text-decoration:line-through;margin-bottom:4px}
+.p-promo-final{font-size:30px;font-weight:900;color:#2D7A4F;letter-spacing:-1px}
+.psave{font-size:12px;font-weight:700;color:#2D7A4F;background:#E8F5EC;padding:3px 12px;border-radius:50px;margin-bottom:20px;display:inline-block}
+
+.pbtn{display:block;width:100%;padding:15px 0;border-radius:50px;font-size:15px;font-weight:700;text-align:center;text-decoration:none;margin-top:auto;font-family:'Inter',sans-serif;transition:all .2s;border:2px solid rgba(123,91,245,.2);color:var(--purple);background:transparent}
+.pbtn:hover:not(.disabled){background:var(--purple-pale)}
+.pc.f .pbtn{background:var(--purple);color:#fff;border-color:var(--purple);animation:pulse 2.5s ease-in-out infinite}
+.pc.f .pbtn:hover:not(.disabled){background:var(--purple-light);animation:none}
+.pbtn.disabled{opacity:.45;cursor:not-allowed;pointer-events:none;animation:none!important;background:#eee!important;border-color:#ddd!important;color:#aaa!important}
+.btn-expired-text{display:none;font-size:12px;color:#C0392B;margin-top:6px;font-weight:600}
+.price-note{text-align:center;font-size:13px;color:var(--gray);margin-top:12px}
+
+/* TICKER */
+.ticker-wrap{background:#fff;border-top:1px solid rgba(0,0,0,.05);border-bottom:1px solid rgba(0,0,0,.05);padding:12px 0;overflow:hidden;margin:60px 0}
+.ticker{display:flex;white-space:nowrap;animation:ticker 30s linear infinite}
+.ticker span{font-size:13px;color:var(--purple);font-weight:600;padding:0 28px;letter-spacing:.04em}
+.ticker span::before{content:"✦";margin-right:10px;opacity:.5;font-size:10px}
+
+/* SECTIONS */
+.sec-eye{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--purple);text-align:center;margin-bottom:10px}
+.sec-h{font-size:42px;font-weight:900;text-align:center;letter-spacing:-1.5px;line-height:1.1;margin-bottom:0}
+
+/* REVIEWS */
+.reviews{padding:80px 60px;background:var(--bg)}
+.reviews-grid{max-width:960px;margin:52px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.rv-card{background:var(--card);border-radius:24px;overflow:hidden;transition:transform .3s,box-shadow .3s}
+.rv-card:hover{transform:translateY(-5px);box-shadow:0 16px 48px rgba(0,0,0,.08)}
+.rv-video{width:100%;aspect-ratio:9/14;background:#111;overflow:hidden}
+.rv-video iframe{width:100%;height:100%;border:none}
+.rv-body{padding:20px 20px 22px}
+.rv-stars{color:var(--purple);font-size:13px;margin-bottom:8px;letter-spacing:2px}
+.rv-name{font-size:15px;font-weight:800;color:var(--dark);margin-bottom:2px}
+.rv-city{font-size:10px;color:var(--gray);margin-bottom:10px;letter-spacing:.1em;text-transform:uppercase}
+.rv-text{font-size:12px;color:#555;line-height:1.65}
+
+/* INCLUDES */
+.includes{padding:80px 60px;background:#fff}
+.inc-cols{max-width:860px;margin:52px auto 0;display:flex;gap:20px}
+.inc-col{flex:1;background:var(--bg);border-radius:24px;padding:32px 26px}
+.inc-col-icon{font-size:26px;margin-bottom:12px}
+.inc-col-title{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--purple);margin-bottom:20px}
+.ii{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#333;line-height:1.55;margin-bottom:12px}
+.ii:last-child{margin-bottom:0}
+.ic{width:20px;height:20px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:11px;font-weight:800;color:#fff}
+
+/* HOW */
+.how{padding:80px 60px;background:var(--bg)}
+.steps{max-width:860px;margin:52px auto 0;display:flex;gap:0;position:relative}
+.steps::before{content:'';position:absolute;top:28px;left:12%;right:12%;height:2px;background:linear-gradient(90deg,var(--purple),var(--gold))}
+.step{flex:1;text-align:center;padding:0 20px;position:relative;z-index:1}
+.step-n{width:56px;height:56px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;margin:0 auto 16px;box-shadow:0 6px 20px rgba(123,91,245,.3)}
+.step-t{font-size:15px;font-weight:800;color:var(--dark);margin-bottom:6px}
+.step-d{font-size:13px;color:var(--gray);line-height:1.6}
+.step-badge{display:inline-block;background:var(--purple-pale);color:var(--purple);font-size:10px;font-weight:700;padding:3px 10px;border-radius:50px;margin-top:8px}
+
+/* COMPARE */
+.compare{padding:80px 60px;background:#fff}
+.cmp-grid{max-width:760px;margin:52px auto 0;display:flex;gap:18px}
+.cmp-card{flex:1;border-radius:24px;padding:30px 24px}
+.cmp-card.bad{background:var(--bg)}
+.cmp-card.good{background:var(--dark);box-shadow:0 12px 48px rgba(0,0,0,.15)}
+.cmp-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px}
+.cmp-card.bad .cmp-title{color:#bbb}
+.cmp-card.good .cmp-title{color:rgba(255,255,255,.3)}
+.cmp-item{display:flex;gap:9px;font-size:13px;margin-bottom:10px;line-height:1.45;align-items:flex-start}
+.cmp-card.bad .cmp-item{color:#bbb}
+.cmp-card.bad .cmp-item::before{content:"✗";color:#E24B4A;flex-shrink:0;font-weight:800}
+.cmp-card.good .cmp-item{color:rgba(255,255,255,.8)}
+.cmp-card.good .cmp-item::before{content:"✓";color:var(--gold);font-weight:800;flex-shrink:0}
+.cmp-sep{height:1px;margin:18px 0}
+.cmp-card.bad .cmp-sep{background:rgba(0,0,0,.08)}
+.cmp-card.good .cmp-sep{background:rgba(255,255,255,.08)}
+.cmp-period{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.cmp-card.bad .cmp-period{color:#bbb}
+.cmp-card.good .cmp-period{color:rgba(255,255,255,.3)}
+.cmp-price{font-size:28px;font-weight:900;letter-spacing:-1px}
+.cmp-card.bad .cmp-price{color:var(--dark)}
+.cmp-card.good .cmp-price{color:#fff}
+.cmp-price.red{color:#E24B4A!important}
+.cmp-price-old{font-size:14px;text-decoration:line-through;color:#bbb;margin-bottom:2px}
+.cmp-card.good .cmp-price-old{color:rgba(255,255,255,.2)}
+.cmp-price-sub{font-size:12px;color:#bbb;margin-top:2px}
+.cmp-card.good .cmp-price-sub{color:rgba(255,255,255,.35)}
+.cmp-save{display:inline-block;background:rgba(196,154,85,.15);color:var(--gold);font-size:11px;font-weight:700;padding:5px 12px;border-radius:50px;margin-top:10px}
+
+/* FAQ */
+.faq{padding:80px 60px;background:var(--bg)}
+.faq-list{max-width:700px;margin:52px auto 0;display:flex;flex-direction:column;gap:12px}
+.faq-item{background:var(--card);border-radius:18px;overflow:hidden;transition:box-shadow .3s}
+.faq-item:hover{box-shadow:0 6px 24px rgba(0,0,0,.06)}
+.faq-q{padding:20px 24px;font-size:15px;font-weight:700;color:var(--dark);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.faq-toggle{width:30px;height:30px;border-radius:50%;background:var(--purple-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;color:var(--purple);font-weight:700;transition:transform .3s,background .3s}
+.faq-item.open .faq-toggle{transform:rotate(45deg);background:var(--purple);color:#fff}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.16,1,.3,1)}
+.faq-a-inner{padding:0 24px 20px;font-size:14px;color:var(--gray);line-height:1.7;border-top:1px solid rgba(0,0,0,.05)}
+.faq-item.open .faq-a{max-height:300px}
+
+/* GUARANTEE */
+.guarantee{padding:72px 60px;background:var(--purple);text-align:center;position:relative;overflow:hidden}
+.guarantee::before{content:'🛡️';position:absolute;font-size:320px;opacity:.06;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+.guar-pill{display:inline-block;background:rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 18px;border-radius:50px;margin-bottom:18px}
+.guarantee h3{font-size:38px;font-weight:900;color:#fff;margin-bottom:12px;letter-spacing:-1.5px;line-height:1.1}
+.guarantee p{font-size:16px;color:rgba(255,255,255,.7);max-width:460px;margin:0 auto;line-height:1.6}
+
+/* CTA */
+.cta{padding:100px 60px;background:var(--bg);text-align:center}
+.cta h2{font-size:54px;font-weight:900;color:var(--dark);margin-bottom:10px;line-height:1.05;letter-spacing:-2.5px}
+.cta h2 em{color:var(--purple);font-style:italic;font-family:'Playfair Display',serif}
+.cta-sub{font-size:15px;color:var(--gray);margin-bottom:52px}
+.pay-steps{display:flex;gap:16px;justify-content:center;margin-bottom:48px;max-width:860px;margin-left:auto;margin-right:auto}
+.ps{flex:1;background:var(--card);border-radius:20px;padding:24px 18px;text-align:center;transition:transform .3s}
+.ps:hover{transform:translateY(-3px)}
+.ps-n{width:36px;height:36px;border-radius:50%;background:var(--purple);color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+.ps-t{font-size:13px;font-weight:800;color:var(--dark);margin-bottom:5px}
+.ps-d{font-size:12px;color:var(--gray);line-height:1.55}
+.cta-buttons{display:flex;gap:14px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.cta-btn{display:inline-block;background:var(--purple);color:#fff;padding:20px 56px;border-radius:50px;font-size:18px;font-weight:800;text-decoration:none;animation:pulse 2.5s ease-in-out infinite;transition:transform .2s}
+.cta-btn:hover{background:var(--purple-light);animation:none;transform:translateY(-2px)}
+.cta-btn.disabled{opacity:.45;pointer-events:none;animation:none;background:#ccc}
+.cta-wa{display:inline-flex;align-items:center;gap:9px;background:#25D366;color:#fff;padding:18px 28px;border-radius:50px;font-size:15px;font-weight:700;text-decoration:none;transition:all .2s}
+.cta-wa:hover{background:#20BF5B;transform:translateY(-2px)}
+.cta-note{font-size:12px;color:#bbb;letter-spacing:.04em}
+
+footer{background:var(--dark);padding:26px 60px;display:flex;align-items:center;justify-content:space-between}
+.fl{font-size:16px;font-weight:900;color:#fff;letter-spacing:.08em;text-transform:uppercase}
+.fl span{color:var(--purple)}
+.fc{font-size:11px;color:#333;letter-spacing:.04em}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">RELI<span>T</span>ALK</div>
+  <a href="https://kaspi.kz/pay/_gate?action=service_with_subservice&service_id=3025&subservice_id=22650&region_id=18" class="nav-btn" id="navBtn" target="_blank">Начать обучение →</a>
+</nav>
+
+<div class="timer-bar" id="timerBar">
+  <span class="timer-label" id="timerLabelText">🔥 Специальные условия действуют ещё:</span>
+  <div class="timer-digits" id="timerDigits">
+    <div class="t-block"><div class="t-num" id="th">05</div><div class="t-lbl">час</div></div>
+    <div class="t-sep">:</div>
+    <div class="t-block"><div class="t-num" id="tm">00</div><div class="t-lbl">мин</div></div>
+    <div class="t-sep">:</div>
+    <div class="t-block"><div class="t-num" id="ts">00</div><div class="t-lbl">сек</div></div>
+  </div>
+  <span class="timer-note" id="timerNote">После истечения цены вернутся</span>
+  <span class="timer-expired-msg" id="timerExpiredMsg">⏱ Время истекло — скидки больше не действуют</span>
+</div>
+
+<section class="hero">
+  <div class="hero-eye">Специальные условия · с 2018 года · 12 000+ выпускников</div>
+  <h1>
+    <span class="black">Выберите свой тариф</span>
+    <span class="purple">и начните говорить</span>
+  </h1>
+  <p class="hero-sub">Вы были на пробном уроке. Вы всё видели. Осталось только решиться — пока действуют спецусловия.</p>
+
+  <div class="promo-section">
+    <p class="promo-hint">Есть промокод от менеджера? Введите для <strong>дополнительной скидки 50%</strong></p>
+    <div class="promo-row">
+      <input type="text" class="promo-input" id="promoInput" placeholder="Введите промокод">
+      <button class="promo-btn" id="promoBtn" onclick="applyPromo()">Применить</button>
+    </div>
+    <div class="promo-success" id="promoSuccess">✓ Скидка 50% применена — поздравляем!</div>
+    <div class="promo-error" id="promoError">Неверный промокод. Попробуйте ещё раз.</div>
+    <div class="promo-expired-msg" id="promoExpiredMsg">⏱ Время вышло — промокод больше не действует</div>
+  </div>
+
+  <div class="expired-banner" id="expiredBanner">
+    <p>⏱ Время специальных условий истекло.<br>Свяжитесь с менеджером для получения актуального предложения.</p>
+  </div>
+
+  <div class="price-wrap">
+    <div class="price-grid">
+
+      <!-- 12 мес -->
+      <div class="pc fade-up d1">
+        <div class="ptag">Разговорный уровень</div>
+        <div class="pname">12 месяцев</div>
+        <!-- Обычная цена крупно -->
+        <div class="p-regular" id="reg-1">490 000 ₸</div>
+        <div class="p-regular-lbl">40 833 ₸ в месяц при рассрочке</div>
+        <div class="pdiv"></div>
+        <!-- Скидочная цена -->
+        <div class="p-discount-row">
+          <span class="p-discount-label">−30%</span>
+          <span class="p-discount-val" id="disc-orig-1">490 000 ₸</span>
+          <span class="p-discount-new" id="disc-new-1">→ 342 000 ₸</span>
+        </div>
+        <div class="psave" id="save-1">Экономия 148 000 ₸</div>
+        <a href="https://kaspi.kz/pay/_gate?action=service_with_subservice&service_id=3025&subservice_id=22650&region_id=18" class="pbtn" id="btn-1" target="_blank">Начать обучение</a>
+        <div class="btn-expired-text" id="exp-1">Скидка истекла</div>
+      </div>
+
+      <!-- 24 мес -->
+      <div class="pc f fade-up d2">
+        <div class="pbadge">ЛУЧШИЙ ВЫБОР</div>
+        <div class="ptag">Свободный английский</div>
+        <div class="pname">24 месяца</div>
+        <div class="p-regular" id="reg-2">832 000 ₸</div>
+        <div class="p-regular-lbl">34 667 ₸ в месяц при рассрочке</div>
+        <div class="pdiv"></div>
+        <div class="p-discount-row">
+          <span class="p-discount-label">−40%</span>
+          <span class="p-discount-val" id="disc-orig-2">832 000 ₸</span>
+          <span class="p-discount-new" id="disc-new-2">→ 499 200 ₸</span>
+        </div>
+        <div class="psave" id="save-2">Экономия 332 800 ₸</div>
+        <a href="https://kaspi.kz/pay/_gate?action=service_with_subservice&service_id=3025&subservice_id=22650&region_id=18" class="pbtn" id="btn-2" target="_blank">Начать обучение →</a>
+        <div class="btn-expired-text" id="exp-2">Скидка истекла</div>
+      </div>
+
+      <!-- Lifetime -->
+      <div class="pc fade-up d3">
+        <div class="ptag">Английский навсегда</div>
+        <div class="pname">Lifetime</div>
+        <div class="p-regular" id="reg-3">1 368 000 ₸</div>
+        <div class="p-regular-lbl">57 000 ₸ в месяц при рассрочке</div>
+        <div class="pdiv"></div>
+        <div class="p-discount-row">
+          <span class="p-discount-label">−50%</span>
+          <span class="p-discount-val" id="disc-orig-3">1 368 000 ₸</span>
+          <span class="p-discount-new" id="disc-new-3">→ 684 000 ₸</span>
+        </div>
+        <div class="psave" id="save-3">Экономия 684 000 ₸</div>
+        <a href="https://kaspi.kz/pay/_gate?action=service_with_subservice&service_id=3025&subservice_id=22650&region_id=18" class="pbtn" id="btn-3" target="_blank">Начать обучение</a>
+        <div class="btn-expired-text" id="exp-3">Скидка истекла</div>
+      </div>
+
+    </div>
+    <p class="price-note">Рассрочка без % · Спецусловия ограничены по времени</p>
+  </div>
+</section>
+
+<div class="ticker-wrap">
+  <div class="ticker">
+    <span>Алматы</span><span>Астана</span><span>Шымкент</span><span>Актау</span><span>Атырау</span><span>Актобе</span><span>Павлодар</span><span>Усть-Каменогорск</span><span>Семей</span><span>Тараз</span><span>Кокшетау</span><span>Петропавловск</span><span>Кызылорда</span><span>Туркестан</span><span>Дубай</span><span>Москва</span><span>Ташкент</span><span>Берлин</span><span>Варшава</span><span>Лондон</span><span>Стамбул</span><span>Бишкек</span><span>Алматы</span><span>Астана</span><span>Шымкент</span><span>Актау</span><span>Атырау</span><span>Актобе</span><span>Павлодар</span><span>Усть-Каменогорск</span><span>Семей</span><span>Тараз</span><span>Кокшетау</span><span>Петропавловск</span><span>Кызылорда</span><span>Туркестан</span><span>Дубай</span><span>Москва</span><span>Ташкент</span><span>Берлин</span><span>Варшава</span><span>Лондон</span><span>Стамбул</span><span>Бишкек</span>
+  </div>
+</div>
+
+<section class="reviews">
+  <div class="sec-eye">Отзывы</div>
+  <h2 class="sec-h fade-up">Они тоже сомневались.<br>Теперь говорят по‑английски.</h2>
+  <div class="reviews-grid">
+    <div class="rv-card fade-up d1">
+      <div class="rv-video"><iframe src="https://drive.google.com/file/d/1pqpn40-Nmt8bLA6llnel97MAArMEyj8k/preview" allow="autoplay" allowfullscreen></iframe></div>
+      <div class="rv-body">
+        <div class="rv-stars">★★★★★</div>
+        <div class="rv-name">Сауле</div>
+        <div class="rv-city">Казахстан</div>
+        <div class="rv-text">«15–20 минут в день — совмещаю с работой. Чувствую прогресс каждую неделю. Понимание на слух улучшается.»</div>
+      </div>
+    </div>
+    <div class="rv-card fade-up d2">
+      <div class="rv-video"><iframe src="https://drive.google.com/file/d/1YkmRT2zrgPeN3e-E-FFjmehElwm-3RtG/preview" allow="autoplay" allowfullscreen></iframe></div>
+      <div class="rv-body">
+        <div class="rv-stars">★★★★★</div>
+        <div class="rv-name">Сауле</div>
+        <div class="rv-city">Казахстан</div>
+        <div class="rv-text">«Занятия понятные. Начинаю лучше понимать язык — это даёт мотивацию продолжать.»</div>
+      </div>
+    </div>
+    <div class="rv-card fade-up d3">
+      <div class="rv-video"><iframe src="https://drive.google.com/file/d/1TB9RF0YgisNjqTuIbluC0-vt0mALjkiH/preview" allow="autoplay" allowfullscreen></iframe></div>
+      <div class="rv-body">
+        <div class="rv-stars">★★★★★</div>
+        <div class="rv-name">Асем</div>
+        <div class="rv-city">Казахстан</div>
+        <div class="rv-text">«До этого пробовала другие курсы. Здесь язык даётся легче. Куратор мотивирует не бросать.»</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="includes">
+  <div class="sec-eye">Что внутри</div>
+  <h2 class="sec-h fade-up">Входит во все тарифы</h2>
+  <div class="inc-cols">
+    <div class="inc-col fade-up d1">
+      <div class="inc-col-icon">🤝</div>
+      <div class="inc-col-title">Поддержка и общение</div>
+      <div class="ii"><div class="ic">✓</div>Куратор ежедневно на связи с 10 до 22</div>
+      <div class="ii"><div class="ic">✓</div>Поддержка сервис-менеджера 1 месяц</div>
+      <div class="ii"><div class="ic">✓</div>Ежедневная практика с носителями языка</div>
+      <div class="ii"><div class="ic">✓</div>Партнёрская программа — $50 другу и тебе</div>
+    </div>
+    <div class="inc-col fade-up d2">
+      <div class="inc-col-icon">📚</div>
+      <div class="inc-col-title">Материалы и инструменты</div>
+      <div class="ii"><div class="ic">✓</div>Книги и фильмы по уровням</div>
+      <div class="ii"><div class="ic">✓</div>Словарь-тренажёр на платформе</div>
+      <div class="ii"><div class="ic">✓</div>Курс IELTS в подарок</div>
+      <div class="ii"><div class="ic">✓</div>Заморозка обучения на 90 дней</div>
+    </div>
+  </div>
+</section>
+
+<section class="how">
+  <div class="sec-eye">Просто и быстро</div>
+  <h2 class="sec-h fade-up">Как это работает</h2>
+  <div class="steps">
+    <div class="step fade-up d1">
+      <div class="step-n">1</div>
+      <div class="step-t">Оплатите</div>
+      <div class="step-d">Нажмите кнопку → Kaspi. ФИО, телефон, сумма. Рассрочка без %.</div>
+      <span class="step-badge">2 минуты</span>
+    </div>
+    <div class="step fade-up d2">
+      <div class="step-n">2</div>
+      <div class="step-t">Отправьте чек + email</div>
+      <div class="step-d">Чек из Kaspi и email — отправьте менеджеру в WhatsApp.</div>
+      <span class="step-badge">5 минут</span>
+    </div>
+    <div class="step fade-up d3">
+      <div class="step-n">3</div>
+      <div class="step-t">Получите доступ</div>
+      <div class="step-d">Менеджер откроет платформу. Куратор напишет в тот же день.</div>
+      <span class="step-badge">10 минут</span>
+    </div>
+    <div class="step fade-up d4">
+      <div class="step-n">4</div>
+      <div class="step-t">Первый урок</div>
+      <div class="step-d">Уже сегодня. Куратор рядом каждый день с 10 до 22.</div>
+      <span class="step-badge">Сегодня</span>
+    </div>
+  </div>
+</section>
+
+<section class="compare">
+  <div class="sec-eye">Сравнение</div>
+  <h2 class="sec-h fade-up">Репетитор vs Relitalk</h2>
+  <div class="cmp-grid">
+    <div class="cmp-card bad fade-up d1">
+      <div class="cmp-title">Репетитор</div>
+      <div class="cmp-item">Один урок — 5 000–8 000 ₸</div>
+      <div class="cmp-item">Нет структуры и программы</div>
+      <div class="cmp-item">Нет поддержки между уроками</div>
+      <div class="cmp-item">Нет гарантии результата</div>
+      <div class="cmp-sep"></div>
+      <div class="cmp-period">В месяц</div>
+      <div class="cmp-price">~80 000 ₸</div>
+      <div class="cmp-price-sub">16 уроков · без гарантии</div>
+      <div class="cmp-sep"></div>
+      <div class="cmp-period">За 2 года</div>
+      <div class="cmp-price red">~1 920 000 ₸</div>
+      <div class="cmp-price-sub">без гарантии результата</div>
+    </div>
+    <div class="cmp-card good fade-up d2">
+      <div class="cmp-title">Relitalk</div>
+      <div class="cmp-item">Куратор на связи каждый день с 10 до 22</div>
+      <div class="cmp-item">Чёткая программа до результата</div>
+      <div class="cmp-item">Ежедневная практика с носителями</div>
+      <div class="cmp-item">Гарантия — не получите результат, доучим бесплатно</div>
+      <div class="cmp-sep"></div>
+      <div class="cmp-period">В месяц</div>
+      <div class="cmp-price">20 800 ₸</div>
+      <div class="cmp-price-sub">всё включено</div>
+      <div class="cmp-sep"></div>
+      <div class="cmp-period">За 2 года</div>
+      <div class="cmp-price-old">832 000 ₸</div>
+      <div class="cmp-price">499 200 ₸</div>
+      <div class="cmp-save">Экономия vs репетитора: 1 420 800 ₸</div>
+    </div>
+  </div>
+</section>
+
+<section class="faq">
+  <div class="sec-eye">Частые вопросы</div>
+  <h2 class="sec-h fade-up">Вы наверняка думаете об этом</h2>
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Что если куплю и не буду заниматься?<div class="faq-toggle">+</div></div>
+      <div class="faq-a"><div class="faq-a-inner">Куратор на связи каждый день с 10 до 22 — напоминает и поддерживает. Плюс заморозка на 90 дней, если жизнь вмешается.</div></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Я уже пробовал учить английский — не получилось<div class="faq-toggle">+</div></div>
+      <div class="faq-a"><div class="faq-a-inner">Обычно бросают из-за отсутствия структуры и поддержки. Здесь куратор рядом, программа чёткая, уроки 15–25 минут. Именно поэтому 12 000+ выпускников.</div></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Дорого. Не уверен что мне подойдёт<div class="faq-toggle">+</div></div>
+      <div class="faq-a"><div class="faq-a-inner">Рассрочка без % — 20 800 ₸ в месяц, это меньше одного урока репетитора. Гарантия результата снимает риск полностью.</div></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Можно ли учиться при плотном графике?<div class="faq-toggle">+</div></div>
+      <div class="faq-a"><div class="faq-a-inner">Уроки 15–25 минут, с любого устройства, в любое время. Никакой привязки к расписанию.</div></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Когда начнётся обучение после оплаты?<div class="faq-toggle">+</div></div>
+      <div class="faq-a"><div class="faq-a-inner">Через 10 минут после того как отправите чек менеджеру в WhatsApp. Куратор напишет в тот же день.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="guarantee fade-up">
+  <div class="guar-pill">🛡️ Гарантия результата</div>
+  <h3>Не получите результат —<br>доучим за свой счёт</h3>
+  <p>Мы уверены в нашей методике и берём на себя полную ответственность за ваш прогресс.</p>
+</section>
+
+<section class="cta">
+  <h2 class="fade-up">Начните сегодня.<br><em>Завтра сложнее решиться.</em></h2>
+  <p class="cta-sub fade-up d1">Оплата через Kaspi · Чек → менеджеру в WhatsApp · Доступ через 10 минут</p>
+  <div class="pay-steps">
+    <div class="ps fade-up d1"><div class="ps-n">1</div><div class="ps-t">Оплатите</div><div class="ps-d">Kaspi → ФИО, телефон, сумма</div></div>
+    <div class="ps fade-up d2"><div class="ps-n">2</div><div class="ps-t">Отправьте чек + email</div><div class="ps-d">Менеджеру в WhatsApp</div></div>
+    <div class="ps fade-up d3"><div class="ps-n">3</div><div class="ps-t">Через 10 минут</div><div class="ps-d">Доступ открыт, куратор пишет</div></div>
+    <div class="ps fade-up d4"><div class="ps-n">4</div><div class="ps-t">Сегодня</div><div class="ps-d">Первый урок уже сегодня</div></div>
+  </div>
+  <div class="cta-buttons fade-up d2">
+    <a href="https://kaspi.kz/pay/_gate?action=service_with_subservice&service_id=3025&subservice_id=22650&region_id=18" class="cta-btn" id="ctaBtn" target="_blank">Начать обучение →</a>
+    <a href="https://wa.me/77089713303" class="cta-wa" target="_blank">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      WhatsApp менеджера
+    </a>
+  </div>
+  <div class="cta-note fade-up d3">Рассрочка без % · Гарантия результата · Промокод FAMILY — скидка 50% от спецусловий</div>
+</section>
+
+<footer>
+  <div class="fl">RELI<span>T</span>ALK</div>
+  <div class="fc">Read, Listen &amp; Talk. · с 2018 года</div>
+  <div class="fc">© 2018–2026</div>
+</footer>
+
+<script>
+// ─── TIMER: 5 часов от открытия, сохраняем в sessionStorage ───
+const DURATION = 5 * 60 * 60; // 5 часов в секундах
+const KEY = 'rl_timer_end';
+
+let endTime = sessionStorage.getItem(KEY);
+if (!endTime) {
+  endTime = Date.now() + DURATION * 1000;
+  sessionStorage.setItem(KEY, endTime);
+} else {
+  endTime = parseInt(endTime);
+}
+
+let isExpired = false;
+let promoApplied = false;
+
+function expireAll() {
+  if (isExpired) return;
+  isExpired = true;
+
+  // Timer bar
+  const bar = document.getElementById('timerBar');
+  bar.classList.add('expired');
+  document.getElementById('timerDigits').style.display = 'none';
+  document.getElementById('timerNote').style.display = 'none';
+  document.getElementById('timerLabelText').style.display = 'none';
+  document.getElementById('timerExpiredMsg').style.display = 'block';
+
+  // Buttons
+  [1,2,3].forEach(i => {
+    const btn = document.getElementById('btn-'+i);
+    btn.classList.add('disabled');
+    btn.removeAttribute('href');
+    btn.textContent = 'Скидка истекла';
+    document.getElementById('exp-'+i).style.display = 'block';
+    // Hide discount rows
+    document.getElementById('disc-new-'+i).classList.add('hidden');
+    document.getElementById('save-'+i).style.display = 'none';
+  });
+
+  // Promo
+  document.getElementById('promoInput').disabled = true;
+  document.getElementById('promoBtn').disabled = true;
+  document.getElementById('promoExpiredMsg').style.display = 'block';
+
+  // CTA btn
+  const ctaBtn = document.getElementById('ctaBtn');
+  ctaBtn.classList.add('disabled');
+  ctaBtn.removeAttribute('href');
+  ctaBtn.textContent = '⏱ Время истекло';
+
+  // Banner
+  document.getElementById('expiredBanner').style.display = 'block';
+}
+
+function updateTimer() {
+  const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+  if (remaining <= 0) {
+    document.getElementById('th').textContent = '00';
+    document.getElementById('tm').textContent = '00';
+    document.getElementById('ts').textContent = '00';
+    expireAll();
+    return;
+  }
+  const h = Math.floor(remaining / 3600);
+  const m = Math.floor((remaining % 3600) / 60);
+  const s = remaining % 60;
+  document.getElementById('th').textContent = String(h).padStart(2,'0');
+  document.getElementById('tm').textContent = String(m).padStart(2,'0');
+  document.getElementById('ts').textContent = String(s).padStart(2,'0');
+}
+updateTimer();
+setInterval(updateTimer, 1000);
+
+// ─── PROMO ───
+function applyPromo() {
+  if (isExpired) {
+    document.getElementById('promoExpiredMsg').style.display = 'block';
+    return;
+  }
+  const code = document.getElementById('promoInput').value.trim().toUpperCase();
+  document.getElementById('promoSuccess').style.display = 'none';
+  document.getElementById('promoError').style.display = 'none';
+
+  if (code === 'FAMILY') {
+    // показываем promo-block, скрываем discount-row
+    [1,2,3].forEach(i => {
+      document.getElementById('drow-'+i).style.display = 'none';
+      document.getElementById('promo-block-'+i).classList.add('visible');
+    });
+    document.getElementById('save-1').textContent = 'Скидка 50% — итого 171 000 ₸';
+    document.getElementById('save-2').textContent = 'Скидка 50% — итого 249 600 ₸';
+    document.getElementById('save-3').textContent = 'Скидка 50% — итого 342 000 ₸';
+    document.getElementById('promoSuccess').style.display = 'block';
+    document.getElementById('promoInput').style.borderColor = '#2D7A4F';
+    document.getElementById('promoBtn').style.background = '#2D7A4F';
+    document.getElementById('promoBtn').textContent = '✓ Применено';
+    document.getElementById('promoBtn').disabled = true;
+    promoApplied = true;
+  } else {
+    document.getElementById('promoError').style.display = 'block';
+    document.getElementById('promoInput').style.borderColor = '#E24B4A';
+    setTimeout(() => {
+      document.getElementById('promoInput').style.borderColor = '';
+      document.getElementById('promoError').style.display = 'none';
+    }, 2000);
+  }
+}
+document.getElementById('promoInput').addEventListener('keydown', e => { if (e.key === 'Enter') applyPromo(); });
+
+// ─── FAQ ───
+function toggleFaq(el) { el.parentElement.classList.toggle('open'); }
+
+// ─── SCROLL ANIMATIONS ───
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: .1 });
+document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
