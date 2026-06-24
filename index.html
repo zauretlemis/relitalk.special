@@ -101,6 +101,8 @@ nav{position:sticky;top:0;z-index:200;background:rgba(242,239,233,.96);backdrop-
 .p-promo-strike{font-size:14px;color:#bbb;text-decoration:line-through;margin-bottom:3px}
 .p-promo-final{font-size:26px;font-weight:900;color:#2D7A4F;letter-spacing:-.5px}
 .p-promo-mo{font-size:11px;color:#2D7A4F;margin-top:3px}
+.pc.promo-applied .p-regular{text-decoration:line-through;color:#ccc!important}
+.pc.promo-applied .p-regular-lbl{text-decoration:line-through;color:#ccc!important}
 .psave{font-size:11px;font-weight:700;color:#2D7A4F;background:#E8F5EC;padding:3px 10px;border-radius:50px;margin-bottom:16px;display:inline-block}
 .pbtn{display:block;width:100%;padding:13px 0;border-radius:50px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;margin-top:auto;font-family:'Inter',sans-serif;transition:all .2s;border:2px solid rgba(123,91,245,.2);color:var(--purple);background:transparent}
 .pbtn:hover:not(.disabled){background:var(--purple-pale)}
@@ -557,6 +559,7 @@ function applyPromo(){
     [1,2,3].forEach(i=>{
       document.getElementById('drow-'+i).style.display='none';
       document.getElementById('promo-block-'+i).classList.add('visible');
+      document.getElementById('promo-block-'+i).closest('.pc').classList.add('promo-applied');
     });
     document.getElementById('save-1').textContent='Скидка 50% — итого 171 000 ₸';
     document.getElementById('save-2').textContent='Скидка 50% — итого 249 600 ₸';
